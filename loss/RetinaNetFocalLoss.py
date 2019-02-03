@@ -2,7 +2,7 @@ from fastai import *
 from fastai.vision import *
 from torch.autograd import Variable
 
-from object_detection_helper import *
+from helper.object_detection_helper import *
 
 class RetinaNetFocalLoss(nn.Module):
 
