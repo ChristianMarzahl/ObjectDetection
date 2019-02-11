@@ -53,7 +53,19 @@ def show_anchors(ancs, size):
     ax.set_xticklabels([])
     ax.set_xlim(-1,1)
     ax.set_ylim(1,-1) #-1 is top, 1 is bottom
-    for i, (x, y) in enumerate(zip(ancs[:, 1], ancs[:, 0])): ax.annotate(i, xy = (x,y))
+    for i, (x, y) in enumerate(zip(ancs[:, 1], ancs[:, 0])):
+        ax.annotate(i, xy = (x,y))
+
+
+def show_boxes(boxes):
+    "Show the `boxes` (size by 4)"
+    _, ax = plt.subplots(1,1, figsize=(5,5))
+    ax.set_xlim(-1,1)
+    ax.set_ylim(1,-1)
+    for i, bbox in enumerate(boxes):
+        bb = bbox.numpy()
+        rect = [bb[1]-bb[3]/2, bb[0]-bb[2]/2, bb[3], bb[2]]
+        draw_rect(ax, rect)
 
 
 def activ_to_bbox(acts, anchors, flatten=True):
@@ -145,9 +157,9 @@ def nms(boxes, scores, thresh=0.5):
     return LongTensor(to_keep)
 
 
-def show_preds(img, bbox_pred, preds, scores, classes):
+def show_preds(img, bbox_pred, preds, scores, classes, figsize=(5,5)):
 
-    _, ax = plt.subplots(1, 1)
+    _, ax = plt.subplots(1, 1, figsize=figsize)
     for bbox, c, scr in zip(bbox_pred, preds, scores):
         img.show(ax=ax)
         txt = str(c.item()) if classes is None else classes[c.item()+1]

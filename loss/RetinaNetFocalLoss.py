@@ -6,20 +6,34 @@ from helper.object_detection_helper import *
 
 class RetinaNetFocalLoss(nn.Module):
 
-    def __init__(self, gamma: float = 2., alpha: float = 0.25, pad_idx: int = 0, scales: Collection[float] = None,
-                 ratios: Collection[float] = None, reg_loss: LossFunction = F.smooth_l1_loss):
+    def __init__(self, anchors: Collection[float], gamma: float = 2., alpha: float = 0.25, pad_idx: int = 0,
+                 reg_loss: LossFunction = F.smooth_l1_loss):
         super().__init__()
         self.gamma, self.alpha, self.pad_idx, self.reg_loss = gamma, alpha, pad_idx, reg_loss
-        self.scales = ifnone(scales, [1, 2 ** (-1 / 3), 2 ** (-2 / 3)])
-        self.ratios = ifnone(ratios, [1 / 2, 1, 2])
+        self.anchors = anchors
+        self.metric_names = ['BBloss', 'focal_loss']
+        #self.scales = ifnone(scales, [1, 2 ** (-1 / 3), 2 ** (-2 / 3)])
+        #self.ratios = ifnone(ratios, [1 / 2, 1, 2])
 
     def _change_anchors(self, sizes: Sizes) -> bool:
+        '''
+        ToDo: check if needed
+        :param sizes:
+        :return:
+        '''
         if not hasattr(self, 'sizes'): return True
         for sz1, sz2 in zip(self.sizes, sizes):
             if sz1[0] != sz2[0] or sz1[1] != sz2[1]: return True
         return False
 
+
     def _create_anchors(self, sizes: Sizes, device: torch.device):
+        '''
+        ToDo: check if needed
+        :param sizes:
+        :param device:
+        :return:
+        '''
         self.sizes = sizes
         self.anchors = create_anchors(sizes, self.ratios, self.scales).to(device)
 
@@ -52,14 +66,26 @@ class RetinaNetFocalLoss(nn.Module):
         clas_pred = clas_pred[clas_mask]
         clas_tgt = torch.cat([clas_tgt.new_zeros(1).long(), clas_tgt])
         clas_tgt = clas_tgt[matches[clas_mask]]
-        return bb_loss + self._focal_loss(clas_pred, clas_tgt) / torch.clamp(bbox_mask.sum(), min=1.)
+        return bb_loss, self._focal_loss(clas_pred, clas_tgt) / torch.clamp(bbox_mask.sum(), min=1.)
 
     def forward(self, output, bbox_tgts, clas_tgts):
         clas_preds, bbox_preds, sizes = output
-        if self._change_anchors(sizes): self._create_anchors(sizes, clas_preds.device)
+        if bbox_tgts.device != self.anchors.device:
+            self.anchors = self.anchors.to(clas_preds.device)
+        #if self.anchors
+        #if self._change_anchors(sizes): self._create_anchors(sizes, clas_preds.device)
         n_classes = clas_preds.size(2)
-        return sum([self._one_loss(cp, bp, ct, bt)
-                    for (cp, bp, ct, bt) in zip(clas_preds, bbox_preds, clas_tgts, bbox_tgts)]) / clas_tgts.size(0)
+
+        bb_loss = torch.tensor(0, dtype=torch.float32).to(clas_preds.device)
+        focal_loss = torch.tensor(0, dtype=torch.float32).to(clas_preds.device)
+        for cp, bp, ct, bt in zip(clas_preds, bbox_preds, clas_tgts, bbox_tgts):
+            bb, focal = self._one_loss(cp, bp, ct, bt)
+
+            bb_loss += bb
+            focal_loss += focal
+
+        self.metrics = dict(zip(self.metric_names, [bb_loss / clas_tgts.size(0), focal_loss / clas_tgts.size(0)]))
+        return (bb_loss+focal_loss) / clas_tgts.size(0)
 
 class SigmaL1SmoothLoss(nn.Module):
 
