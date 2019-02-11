@@ -18,7 +18,8 @@ class LateralUpsampleMerge(nn.Module):
 class RetinaNet(nn.Module):
     "Implements RetinaNet from https://arxiv.org/abs/1708.02002"
 
-    def __init__(self, encoder: nn.Module, n_classes, final_bias=0., chs=256, n_anchors=9, flatten=True, sizes=None):
+    def __init__(self, encoder: nn.Module, n_classes, final_bias:float=0.,  n_conv:float=4,
+                 chs=256, n_anchors=9, flatten=True, sizes=None):
         super().__init__()
         self.n_classes, self.flatten = n_classes, flatten
         imsize = (256, 256)
@@ -32,8 +33,8 @@ class RetinaNet(nn.Module):
         self.merges = nn.ModuleList([LateralUpsampleMerge(chs, szs[1], hook)
                                      for szs, hook in zip(sfs_szs[-2:-4:-1], hooks[-2:-4:-1])])
         self.smoothers = nn.ModuleList([conv2d(chs, chs, 3, bias=True) for _ in range(3)])
-        self.classifier = self._head_subnet(n_classes, n_anchors, final_bias, chs=chs)
-        self.box_regressor = self._head_subnet(4, n_anchors, 0., chs=chs)
+        self.classifier = self._head_subnet(n_classes, n_anchors, final_bias, chs=chs, n_conv=n_conv)
+        self.box_regressor = self._head_subnet(4, n_anchors, 0., chs=chs, n_conv=n_conv)
 
     def _head_subnet(self, n_classes, n_anchors, final_bias=0., n_conv=4, chs=256):
         layers = [self._conv2d_relu(chs, chs, bias=True) for _ in range(n_conv)]
