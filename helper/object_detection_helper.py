@@ -166,6 +166,21 @@ def show_preds(img, bbox_pred, preds, scores, classes, figsize=(5,5)):
         draw_rect(ax, [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
 
 
+def show_results(img, bbox_pred, preds, scores, classes, bbox_gt, preds_gt, figsize=(5,5)):
+
+    _, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    # show prediction
+    for bbox, c, scr in zip(bbox_pred, preds, scores):
+        img.show(ax=ax[0])
+        txt = str(c.item()) if classes is None else classes[c.item()+1]
+        draw_rect(ax[0], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
+
+    # show gt
+    for bbox, c in zip(bbox_gt, preds_gt):
+        img.show(ax=ax[1])
+        txt = str(c.item()) if classes is None else classes[c.item()]
+        draw_rect(ax[1], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt}')
+
 def process_output(clas_pred, bbox_pred, anchors, detect_thresh=0.25):
     bbox_pred = activ_to_bbox(bbox_pred, anchors.to(clas_pred.device))
     clas_pred = torch.sigmoid(clas_pred)

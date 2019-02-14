@@ -12,30 +12,6 @@ class RetinaNetFocalLoss(nn.Module):
         self.gamma, self.alpha, self.pad_idx, self.reg_loss = gamma, alpha, pad_idx, reg_loss
         self.anchors = anchors
         self.metric_names = ['BBloss', 'focal_loss']
-        #self.scales = ifnone(scales, [1, 2 ** (-1 / 3), 2 ** (-2 / 3)])
-        #self.ratios = ifnone(ratios, [1 / 2, 1, 2])
-
-    def _change_anchors(self, sizes: Sizes) -> bool:
-        '''
-        ToDo: check if needed
-        :param sizes:
-        :return:
-        '''
-        if not hasattr(self, 'sizes'): return True
-        for sz1, sz2 in zip(self.sizes, sizes):
-            if sz1[0] != sz2[0] or sz1[1] != sz2[1]: return True
-        return False
-
-
-    def _create_anchors(self, sizes: Sizes, device: torch.device):
-        '''
-        ToDo: check if needed
-        :param sizes:
-        :param device:
-        :return:
-        '''
-        self.sizes = sizes
-        self.anchors = create_anchors(sizes, self.ratios, self.scales).to(device)
 
     def _unpad(self, bbox_tgt, clas_tgt):
         i = torch.min(torch.nonzero(clas_tgt - self.pad_idx))
@@ -72,9 +48,6 @@ class RetinaNetFocalLoss(nn.Module):
         clas_preds, bbox_preds, sizes = output
         if bbox_tgts.device != self.anchors.device:
             self.anchors = self.anchors.to(clas_preds.device)
-        #if self.anchors
-        #if self._change_anchors(sizes): self._create_anchors(sizes, clas_preds.device)
-        n_classes = clas_preds.size(2)
 
         bb_loss = torch.tensor(0, dtype=torch.float32).to(clas_preds.device)
         focal_loss = torch.tensor(0, dtype=torch.float32).to(clas_preds.device)
