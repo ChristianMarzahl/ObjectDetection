@@ -166,9 +166,12 @@ def show_preds(img, bbox_pred, preds, scores, classes, figsize=(5,5)):
         draw_rect(ax, [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
 
 
-def show_results(img, bbox_pred, preds, scores, classes, bbox_gt, preds_gt, figsize=(5,5)):
+def show_results(img, bbox_pred, preds, scores, classes, bbox_gt, preds_gt, figsize=(5,5)
+                 , titleA: str="", titleB: str=""):
 
     _, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    ax[0].set_title(titleA)
+    ax[1].set_title(titleB)
     # show prediction
     for bbox, c, scr in zip(bbox_pred, preds, scores):
         img.show(ax=ax[0])
