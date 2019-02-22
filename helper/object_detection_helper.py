@@ -1,3 +1,4 @@
+import numpy as np
 from fastai import *
 from fastai.vision import *
 
@@ -196,3 +197,11 @@ def process_output(clas_pred, bbox_pred, anchors, detect_thresh=0.25):
     bbox_pred = tlbr2cthw(torch.clamp(cthw2tlbr(bbox_pred), min=-1, max=1))
     scores, preds = clas_pred.max(1)
     return bbox_pred, scores, preds
+
+
+def rescale_boxes(bboxes, t_sz: Tensor):
+
+    bboxes[:, 2:] = bboxes[:, 2:] * t_sz / 2
+    bboxes[:, :2] = (bboxes[:, :2] + 1) * t_sz / 2
+
+    return bboxes
