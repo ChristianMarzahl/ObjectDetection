@@ -30,11 +30,11 @@ class BBLossMetrics(LearnerCallback):
             self.metrics[name] += bs * self.learn.loss_func.metrics[name].detach().cpu()
         self.nums += bs
 
-    def on_epoch_end(self, **kwargs):
+    def on_epoch_end(self, last_metrics, **kwargs):
         "Finish the computation and sends the result to the Recorder."
         if not self.nums: return
         metrics = [self.metrics[name]/self.nums for name in self.names]
-        self.learn.recorder.add_metrics(metrics)
+        return {'last_metrics': last_metrics + metrics}
 
 
 class BBMetrics(LearnerCallback):
@@ -68,7 +68,7 @@ class BBMetrics(LearnerCallback):
                 self.metrics[name] += bs * self.learn.loss_func.metrics[name].detach().cpu()
         self.nums += bs
 
-    def on_epoch_end(self, **kwargs):
+    def on_epoch_end(self, last_metrics, **kwargs):
         "Finish the computation and sends the result to the Recorder."
         if not self.nums: return
         metrics = [self.metrics[name]/self.nums for name in self.names if name in self.learn.loss_func.metrics]
@@ -78,17 +78,20 @@ class BBMetrics(LearnerCallback):
                 if hasattr(metric, 'metric_names') and name in metric.metrics.keys():
                     metrics.append(metric.metrics[name])
 
-        self.learn.recorder.add_metrics(metrics)
+        return {'last_metrics': last_metrics + metrics}
 
 
 class PascalVOCMetric(Callback):
 
-    def __init__(self, anchors, size, metric_names: list, detect_thresh: float=0.3, nms_thresh: float=0.3):
+    def __init__(self, anchors, size, metric_names: list, detect_thresh: float=0.3, nms_thresh: float=0.3
+                 , images_per_batch: int=-1):
         self.ap = 'AP'
         self.anchors = anchors
         self.size = size
         self.detect_thresh = detect_thresh
         self.nms_thresh = nms_thresh
+
+        self.images_per_batch = images_per_batch
         self.metric_names = ["{}-{}".format(self.ap, i) for i in metric_names]
 
         self.evaluator = Evaluator()
@@ -101,10 +104,11 @@ class PascalVOCMetric(Callback):
 
     def on_batch_end(self, last_output, last_target, **kwargs):
         bbox_gt_batch, class_gt_batch = last_target
-        class_pred_batch, bbox_pred_batch, _ = last_output
+        class_pred_batch, bbox_pred_batch = last_output[:2]
 
+        self.images_per_batch = self.images_per_batch if self.images_per_batch > 0 else class_pred_batch.shape[0]
         for bbox_gt, class_gt, clas_pred, bbox_pred in \
-                list(zip(bbox_gt_batch, class_gt_batch, class_pred_batch, bbox_pred_batch)):
+                list(zip(bbox_gt_batch, class_gt_batch, class_pred_batch, bbox_pred_batch))[: self.images_per_batch]:
 
             bbox_pred, scores, preds = process_output(clas_pred, bbox_pred, self.anchors, self.detect_thresh)
             if bbox_pred is None:# or len(preds) > 3 * len(bbox_gt):
@@ -137,7 +141,9 @@ class PascalVOCMetric(Callback):
 
                 self.boundingBoxes.addBoundingBox(temp)
 
-            for box, cla, scor in zip(bbox_pred, preds, scores):
+            # to reduce math complexity take maximal three times the number of gt boxes
+            num_boxes = len(bbox_gt) * 3
+            for box, cla, scor in list(zip(bbox_pred, preds, scores))[:num_boxes]:
                 temp = BoundingBox(imageName=str(self.imageCounter), classId=str(cla), x=box[0], y=box[1],
                                    w=box[2], h=box[3], typeCoordinates=CoordinatesType.Absolute, classConfidence=scor,
                                    bbType=BBType.Detected, format=BBFormat.XYWH, imgSize=(self.size, self.size))
@@ -148,7 +154,7 @@ class PascalVOCMetric(Callback):
             self.imageCounter += 1
 
 
-    def on_epoch_end(self, **kwargs):
+    def on_epoch_end(self, last_metrics, **kwargs):
         if self.boundingBoxes.count() > 0:
             self.metrics = {}
             metricsPerClass = self.evaluator.GetPascalVOCMetrics(self.boundingBoxes, IOUThreshold=0.3)
@@ -156,6 +162,8 @@ class PascalVOCMetric(Callback):
 
             for mc in metricsPerClass:
                 self.metrics['{}-{}'.format(self.ap, mc['class'])] = max(mc[self.ap], 0)
+
+            return {'last_metrics': last_metrics + [self.metric]}
         else:
-            self.metric = 0
             self.metrics = dict(zip(self.metric_names, [0 for i in range(len(self.metric_names))]))
+            return {'last_metrics': last_metrics + [0]}

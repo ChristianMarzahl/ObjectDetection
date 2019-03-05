@@ -110,9 +110,11 @@ def match_anchors(anchors, targets, match_thr=0.5, bkg_thr=0.4):
     "Match `anchors` to targets. -1 is match to background, -2 is ignore."
     ious = IoU_values(anchors, targets)
     matches = anchors.new(anchors.size(0)).zero_().long() - 2
-    vals,idxs = torch.max(ious,1)
-    matches[vals < bkg_thr] = -1
-    matches[vals > match_thr] = idxs[vals > match_thr]
+
+    if ious.shape[1] > 0:
+        vals,idxs = torch.max(ious,1)
+        matches[vals < bkg_thr] = -1
+        matches[vals > match_thr] = idxs[vals > match_thr]
     #Overwrite matches with each target getting the anchor that has the max IoU.
     #vals,idxs = torch.max(ious,0)
     #If idxs contains repetition, this doesn't bug and only the last is considered.
@@ -175,15 +177,15 @@ def show_results(img, bbox_pred, preds, scores, classes, bbox_gt, preds_gt, figs
     ax[1].set_title(titleB)
     # show prediction
     for bbox, c, scr in zip(bbox_pred, preds, scores):
-        img.show(ax=ax[0])
-        txt = str(c.item()) if classes is None else classes[c.item()+1]
-        draw_rect(ax[0], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
+        img.show(ax=ax[1])
+        txt = str(c.item()) if classes is None else classes[c.item()]
+        draw_rect(ax[1], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
 
     # show gt
     for bbox, c in zip(bbox_gt, preds_gt):
-        img.show(ax=ax[1])
+        img.show(ax=ax[0])
         txt = str(c.item()) if classes is None else classes[c.item()]
-        draw_rect(ax[1], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt}')
+        draw_rect(ax[0], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt}')
 
 def process_output(clas_pred, bbox_pred, anchors, detect_thresh=0.25):
     bbox_pred = activ_to_bbox(bbox_pred, anchors.to(clas_pred.device))
