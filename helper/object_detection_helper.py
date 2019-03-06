@@ -177,9 +177,10 @@ def show_results(img, bbox_pred, preds, scores, classes, bbox_gt, preds_gt, figs
     ax[1].set_title(titleB)
     # show prediction
     img.show(ax=ax[1])
-    for bbox, c, scr in zip(bbox_pred, preds, scores):
-        txt = str(c.item()) if classes is None else classes[c.item()]
-        draw_rect(ax[1], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
+    if bbox_pred is not None:
+        for bbox, c, scr in zip(bbox_pred, preds, scores):
+            txt = str(c.item()) if classes is None else classes[c.item()]
+            draw_rect(ax[1], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
 
     # show gt
     img.show(ax=ax[0])
