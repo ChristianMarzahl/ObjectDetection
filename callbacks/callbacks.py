@@ -92,6 +92,7 @@ class PascalVOCMetric(Callback):
         self.nms_thresh = nms_thresh
 
         self.images_per_batch = images_per_batch
+        self.metric_names_original = metric_names
         self.metric_names = ["{}-{}".format(self.ap, i) for i in metric_names]
 
         self.evaluator = Evaluator()
@@ -135,7 +136,7 @@ class PascalVOCMetric(Callback):
             scores = to_np(scores)
 
             for box, cla in zip(bbox_gt, class_gt):
-                temp = BoundingBox(imageName=str(self.imageCounter), classId=str(cla), x=box[0], y=box[1],
+                temp = BoundingBox(imageName=str(self.imageCounter), classId=self.metric_names_original[cla], x=box[0], y=box[1],
                                w=box[2], h=box[3], typeCoordinates=CoordinatesType.Absolute,
                                bbType=BBType.GroundTruth, format=BBFormat.XYWH, imgSize=(self.size,self.size))
 
@@ -144,7 +145,7 @@ class PascalVOCMetric(Callback):
             # to reduce math complexity take maximal three times the number of gt boxes
             num_boxes = len(bbox_gt) * 3
             for box, cla, scor in list(zip(bbox_pred, preds, scores))[:num_boxes]:
-                temp = BoundingBox(imageName=str(self.imageCounter), classId=str(cla), x=box[0], y=box[1],
+                temp = BoundingBox(imageName=str(self.imageCounter), classId=self.metric_names_original[cla], x=box[0], y=box[1],
                                    w=box[2], h=box[3], typeCoordinates=CoordinatesType.Absolute, classConfidence=scor,
                                    bbType=BBType.Detected, format=BBFormat.XYWH, imgSize=(self.size, self.size))
 

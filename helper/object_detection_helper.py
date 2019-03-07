@@ -179,7 +179,7 @@ def show_results(img, bbox_pred, preds, scores, classes, bbox_gt, preds_gt, figs
     for bbox, c, scr in zip(bbox_pred, preds, scores):
         img.show(ax=ax[1])
         txt = str(c.item()) if classes is None else classes[c.item()]
-        draw_rect(ax[1], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.2f}')
+        draw_rect(ax[1], [bbox[1],bbox[0],bbox[3],bbox[2]], text=f'{txt} {scr:.1f}')
 
     # show gt
     for bbox, c in zip(bbox_gt, preds_gt):
@@ -207,3 +207,62 @@ def rescale_boxes(bboxes, t_sz: Tensor):
     bboxes[:, :2] = (bboxes[:, :2] + 1) * t_sz / 2
 
     return bboxes
+
+def show_anchors_on_images(data, anchors, figsize=(15,15)):
+    all_boxes = []
+    all_labels = []
+    x, y = data.one_batch(DatasetType.Train, True, True)
+    for image, bboxes, labels in zip(x, y[0], y[1]):
+        image = Image(image.float().clamp(min=0, max=1))
+
+        # 0=not found; 1=found; found 2=anchor
+        processed_boxes = []
+        processed_labels = []
+        for gt_box in tlbr2cthw(bboxes[labels > 0]):
+            matches = match_anchors(anchors, gt_box[None, :])
+            bbox_mask = matches >= 0
+            if bbox_mask.sum() != 0:
+                bbox_tgt = anchors[bbox_mask]
+
+                processed_boxes.append(to_np(gt_box))
+                processed_labels.append(2)
+                for bb in bbox_tgt:
+                    processed_boxes.append(to_np(bb))
+                    processed_labels.append(3)
+            else:
+                processed_boxes.append(to_np(gt_box))
+                processed_labels.append(0)
+                val, idx = torch.max(IoU_values(anchors, gt_box[None, :]), 0)
+                best_fitting_anchor = anchors[idx][0]
+                processed_boxes.append(to_np(best_fitting_anchor))
+                processed_labels.append(1)
+
+        all_boxes.extend(processed_boxes)
+        all_labels.extend(processed_labels)
+
+        processed_boxes = np.array(processed_boxes)
+        processed_labels = np.array(processed_labels)
+
+        _, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+        ax[0].set_title("Matched Anchors")
+        ax[1].set_title("No match")
+
+        if sum(processed_labels == 2) > 0:
+            imageBB = ImageBBox.create(*image.size, cthw2tlbr(tensor(processed_boxes[processed_labels > 1])),
+                                           labels=processed_labels[processed_labels > 1],
+                                           classes=["", "", "Match", "Anchor"], scale=False)
+
+            image.show(ax=ax[0], y=imageBB)
+        else:
+            image.show(ax=ax[0])
+
+        if sum(processed_labels == 0) > 0:
+            imageBBNoMatch = ImageBBox.create(*image.size, cthw2tlbr(tensor(processed_boxes[processed_labels <= 1])),
+                                                  labels=processed_labels[processed_labels <= 1],
+                                                  classes=["No Match", "Anchor"], scale=False)
+            image.show(ax=ax[1], y=imageBBNoMatch)
+        else:
+            image.show(ax=ax[1])
+
+
+    return np.array(all_boxes), np.array(all_labels)
