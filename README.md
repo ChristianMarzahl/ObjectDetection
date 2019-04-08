@@ -4,8 +4,8 @@ This repo is created just for educational reasons.
 But if you like it please let me know.
 
 # Examples:
-[Medical images](examples/Cells_Retina_Net.ipynb)
-[Coco subset](examples/CocoTiny_Retina_Net.ipynb)
+- [Medical images](examples/Cells_Retina_Net.ipynb)
+- [Coco subset](examples/CocoTiny_Retina_Net.ipynb)
 
 # Results:
 
@@ -17,7 +17,7 @@ But if you like it please let me know.
 # Features:
 
 [x] Coco Metric at train time
-![Coco Metrics](Images/Metrics.png "Metrics")
+![Coco Metrics](Images/TrainCocoMetrics.png "Metrics")
 [x] Flexibility
 ```python
 # use the feature map sizes 32,18,8,4 with 32 channels and two conv layers for detection and classification
@@ -41,7 +41,9 @@ RetinaNet(encoder, n_classes=data.train_ds.c, n_anchors=18, sizes=[32,16,8,4], c
 RetinaNet(encoder, n_classes=data.train_ds.c, n_anchors=3, sizes=[32], chs=8, final_bias=-4., n_conv=3)
 ```
 
-[x] Debug anchor matches for training
+[x] Debug anchor matches for training.
+
+
 On the left image we see objects that are represented by anchors.
 On the right objects with no corresponding anchors for training.
 ![Anchors](Images/anchors.png "anchors")
