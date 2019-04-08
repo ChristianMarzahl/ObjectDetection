@@ -117,6 +117,11 @@ class PascalVOCMetric(Callback):
 
             #image = np.zeros((512, 512, 3), np.uint8)
 
+            # if the number is to hight evaluation is very slow
+            total_nms_examples = len(class_gt) * 3
+            bbox_pred = bbox_pred[:total_nms_examples]
+            scores = scores[:total_nms_examples]
+            preds = preds[:total_nms_examples]
             to_keep = nms(bbox_pred, scores, self.nms_thresh)
             bbox_pred, preds, scores = bbox_pred[to_keep].cpu(), preds[to_keep].cpu(), scores[to_keep].cpu()
 
