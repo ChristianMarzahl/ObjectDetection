@@ -3,6 +3,9 @@ Some experiments with object detection in PyTorch and [FastAi](https://www.fast.
 This repo is created for educational reasons and to get a deeper understanding of [RetinaNet](https://arxiv.org/abs/1708.02002) and object detection general. If you like it, please let me know, if you find any bugs or tips for improvements also. 
 
 
+
+[![RetinaNet WSI](http://img.youtube.com/vi/xCcdVgV1rRA/0.jpg)](https://www.youtube.com/watch?v=xCcdVgV1rRA "RetinaNet WSI")
+
 The basline for this notebook was created by [Sylvain Gugger](https://github.com/sgugger) from FastAi [DevNotebook](https://github.com/fastai/fastai_docs/blob/master/dev_nb/102a_coco.ipynb). Thank you very much, it was a great starting point and I'm a big fan off your work.
 
 
