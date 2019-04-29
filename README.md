@@ -1,7 +1,15 @@
 # ObjectDetection
-Some experiments with object detection in PyTorch and FastAi.
-This repo is created just for educational reasons.
-But if you like it please let me know.
+Some experiments with object detection in PyTorch and [FastAi](https://www.fast.ai/).
+This repo is created for educational reasons and to get a deeper understanding of [RetinaNet](https://arxiv.org/abs/1708.02002) and object detection general. If you like it, please let me know, if you find any bugs or tips for improvements also. 
+
+
+The basline for this notebook was created by [Sylvain Gugger](https://github.com/sgugger) from FastAi [DevNotebook](https://github.com/fastai/fastai_docs/blob/master/dev_nb/102a_coco.ipynb). Thank you very much, it was a great starting point and I'm a big fan off your work.
+
+
+Library           | version           |  link             
+------------------|-------------------|-------------------
+Object-Detection-Metrics             |          | https://github.com/rafaelpadilla/Object-Detection-Metrics
+
 
 # Examples:
 - [Medical images](examples/Cells_Retina_Net.ipynb)
@@ -16,7 +24,7 @@ But if you like it please let me know.
 
 # Features:
 
-[x] Coco Metric at train time
+[x] Coco Metric at train time via callback 
 ![Coco Metrics](Images/TrainCocoMetrics.png "Metrics")
 [x] Flexibility
 ```python
