@@ -45,9 +45,9 @@ class RetinaNetFocalLoss(nn.Module):
         return bb_loss, self._focal_loss(clas_pred, clas_tgt) / torch.clamp(bbox_mask.sum(), min=1.)
 
     def forward(self, output, bbox_tgts, clas_tgts):
-        clas_preds, bbox_preds, sizes = output
+        clas_preds, bbox_preds = output[:2]
         if bbox_tgts.device != self.anchors.device:
-            self.anchors = self.anchors.to(clas_preds.device)
+            self.anchors = self.anchors.to(bbox_tgts.device)
 
         bb_loss = torch.tensor(0, dtype=torch.float32).to(clas_preds.device)
         focal_loss = torch.tensor(0, dtype=torch.float32).to(clas_preds.device)
