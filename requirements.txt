@@ -1,2 +1,4 @@
+numpy
 fastai
 opencv-python
+openslide-python
