@@ -2,23 +2,44 @@
 Some experiments with object detection in PyTorch and [FastAi](https://www.fast.ai/).
 This repo is created for educational reasons and to get a deeper understanding of [RetinaNet](https://arxiv.org/abs/1708.02002) and object detection general. If you like it, please let me know, if you find any bugs or tips for improvements also. 
 
+# Install
+
+```
+pip install object-detection-fastai
+```
+
+Test: [Coco Colab](object_detection_fastai/https://colab.research.google.com/drive/1qUEy1w8uYT2PQhan77RIn8NhfE_bMk63)
+
+# Update old code
+
+```python
+# Old imports:
+from helper.object_detection_helper import *
+from loss.RetinaNetFocalLoss import RetinaNetFocalLoss
+from models.RetinaNet import RetinaNet
+from callbacks.callbacks import BBLossMetrics, BBMetrics, PascalVOCMetric
+
+# New imports
+from object_detection_fastai.helper.object_detection_helper import *
+from object_detection_fastai.loss.RetinaNetFocalLoss import RetinaNetFocalLoss
+from object_detection_fastai.models.RetinaNet import RetinaNet
+from object_detection_fastai.callbacks.callbacks import BBLossMetrics, BBMetrics, PascalVOCMetric
+```
+
 
 [![RetinaNet WSI](http://img.youtube.com/vi/xCcdVgV1rRA/0.jpg)](https://www.youtube.com/watch?v=xCcdVgV1rRA "RetinaNet WSI")
 
 The basline for this notebook was created by [Sylvain Gugger](https://github.com/sgugger) from FastAi [DevNotebook](https://github.com/fastai/fastai_docs/blob/master/dev_nb/102a_coco.ipynb). Thank you very much, it was a great starting point and I'm a big fan off your work.
 
 
-Library           | version           |  link             
-------------------|-------------------|-------------------
-Object-Detection-Metrics             |          | https://github.com/rafaelpadilla/Object-Detection-Metrics
-
 # Publications using this code:
 
 [x] [Deep Learning-Based Quantification of Pulmonary Hemosiderophages in Cytology Slides](https://arxiv.org/abs/1908.04767)
 
 # Examples:
-- [Medical images](examples/Cells_Retina_Net.ipynb)
-- [Coco subset](examples/CocoTiny_Retina_Net.ipynb)
+- [Medical images](object_detection_fastai/examples/Cells_Retina_Net.ipynb)
+- [Coco subset](object_detection_fastai/examples/CocoTiny_Retina_Net.ipynb)
+- [Coco Colab](object_detection_fastai/https://colab.research.google.com/drive/1qUEy1w8uYT2PQhan77RIn8NhfE_bMk63)
 
 # Results:
 

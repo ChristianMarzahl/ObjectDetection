@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="FastAi-Object-Detection", 
-    version="0.0.1",
+    name="object-detection-fastai", 
+    version="0.0.3",
     author="Christian Marzahl",
     author_email="christian.marzahl@gamil.com",
     description="Uses RetinaNet with FastAi",
