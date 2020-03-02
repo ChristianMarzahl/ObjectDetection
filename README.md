@@ -8,7 +8,7 @@ This repo is created for educational reasons and to get a deeper understanding o
 pip install object-detection-fastai
 ```
 
-Test: [Coco Colab](object_detection_fastai/https://colab.research.google.com/drive/1qUEy1w8uYT2PQhan77RIn8NhfE_bMk63)
+Test: [Coco Colab](https://colab.research.google.com/drive/1qUEy1w8uYT2PQhan77RIn8NhfE_bMk63)
 
 # Update old code
 
