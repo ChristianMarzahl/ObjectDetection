@@ -46,6 +46,21 @@ class SlideContainer():
                                                "level": self.level})
 
         # use default sampling method
+        width, height = self.slide.level_dimensions[self.level]
+        if len(self.y[0]) == 0:
+            return randint(0, width - self.shape[0]), randint(0, height - self.shape[1])
+        else:
+            # use default sampling method
+            class_id = np.random.choice( self.classes, 1)[0]
+            ids = np.array( self.y[1]) == class_id
+            xmin, ymin, _, _ = np.array( self.y[0])[ids][randint(0, np.count_nonzero(ids) - 1)]
+
+            xmin, ymin = max(1, int(xmin - self.shape[0] / 2)), max(1, int(ymin - self.shape[1] / 2))
+            xmin, ymin = min(xmin, width - self.shape[0]), min(ymin, height - self.shape[1])
+
+            return xmin, ymin
+
+
         class_id = np.random.choice(self.classes, 1)[0]
         ids = self.y[1] == class_id
         xmin, ymin, _, _ = np.array(self.y[0])[ids][randint(0, np.count_nonzero(ids) - 1)]
@@ -93,7 +108,6 @@ class SlideItemList(ItemList):
         self.label_cls,self.inner_df,self.processor = ifnone(label_cls,self._label_cls),inner_df,processor
         self._label_list,self._split = SlideLabelList,ItemLists
         self.copy_new = ['x', 'label_cls', 'path']
-        self.__post_init__()
 
     def __getitem__(self,idxs: int, x: int=0, y: int=0)->Any:
         idxs = try_int(idxs)
@@ -133,10 +147,11 @@ class SlideObjectCategoryList(ObjectCategoryList):
     def get(self, i, x: int=0, y: int=0):
         h, w = self.x.items[i].shape
         bboxes, labels = self.items[i]
-        if x > 0 and y > 0:
-            bboxes = np.array(bboxes)
-            labels = np.array(labels)
 
+        bboxes = np.array(bboxes)
+        labels = np.array(labels)
+
+        if len(labels) > 0:
             bboxes[:, [0, 2]] = bboxes[:, [0, 2]] - x
             bboxes[:, [1, 3]] = bboxes[:, [1, 3]] - y
 
@@ -144,19 +159,18 @@ class SlideObjectCategoryList(ObjectCategoryList):
             bb_heights = (bboxes[:, 3] - bboxes[:, 1]) / 2
 
             ids = ((bboxes[:, 0] + bb_widths) > 0) \
-                  & ((bboxes[:, 1] + bb_heights) > 0) \
-                  & ((bboxes[:, 2] - bb_widths) < w) \
-                  & ((bboxes[:, 3] - bb_heights) < h)
+                      & ((bboxes[:, 1] + bb_heights) > 0) \
+                      & ((bboxes[:, 2] - bb_widths) < w) \
+                      & ((bboxes[:, 3] - bb_heights) < h)
 
             bboxes = bboxes[ids]
-            bboxes = np.clip(bboxes, 0, x)
+            bboxes = np.clip(bboxes, 0, max(h,w))
             bboxes = bboxes[:, [1, 0, 3, 2]]
 
             labels = labels[ids]
-            if len(labels) == 0:
-                labels = np.array([0])
-                bboxes = np.array([[0, 0, 1, 1]])
+        
+        if len(labels) == 0:
+            labels = np.array([0])
+            bboxes = np.array([[0, 0, 1, 1]])
 
-            return ImageBBox.create(h, w, bboxes, labels, classes=self.classes, pad_idx=self.pad_idx)
-        else:
-            return ImageBBox.create(h, w, bboxes[:10], labels[:10], classes=self.classes, pad_idx=self.pad_idx)
+        return ImageBBox.create(h, w, bboxes, labels, classes=self.classes, pad_idx=self.pad_idx)

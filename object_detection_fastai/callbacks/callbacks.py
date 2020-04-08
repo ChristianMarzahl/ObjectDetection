@@ -192,6 +192,9 @@ class PascalVOCMetricByDistance(PascalVOCMetric):
         self.metric_names_original = metric_names
         self.metric_names = ["{}-{}".format(self.ap, i) for i in metric_names]
 
+        self.evaluator = Evaluator()
+        self.boundingBoxes = BoundingBoxes()
+
 
     def on_batch_end(self, last_output, last_target, **kwargs):
         bbox_gt_batch, class_gt_batch = last_target
