@@ -10,7 +10,7 @@ def create_anchors(sizes, ratios, scales, flatten=True):
     anchors = []
     for h,w in sizes:
         #4 here to have the anchors overlap.
-        sized_aspects = 4 * (aspects * torch.tensor([2/h,2/w])).unsqueeze(0)
+        sized_aspects = (aspects * torch.tensor([2/h,2/w])).unsqueeze(0)
         base_grid = create_grid((h,w)).unsqueeze(1)
         n,a = base_grid.size(0),aspects.size(0)
         ancs = torch.cat([base_grid.expand(n,a,2), sized_aspects.expand(n,a,2)], 2)
