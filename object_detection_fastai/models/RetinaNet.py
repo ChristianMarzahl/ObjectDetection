@@ -1,7 +1,6 @@
 from fastai import *
 from fastai.vision import *
 from fastai.callbacks import *
-from fastai.vision.models.unet import _get_sfs_idxs
 
 # export
 class LateralUpsampleMerge(nn.Module):
@@ -25,7 +24,6 @@ class RetinaNet(nn.Module):
         imsize = (256, 256)
         self.sizes = sizes
         sfs_szs, x, hooks = self._model_sizes(encoder, size=imsize)
-        sfs_idxs = _get_sfs_idxs(sfs_szs)
         self.encoder = encoder
         self.c5top5 = conv2d(sfs_szs[-1][1], chs, ks=1, bias=True)
         self.c5top6 = conv2d(sfs_szs[-1][1], chs, stride=2, bias=True)
