@@ -2,3 +2,4 @@ numpy
 fastai
 opencv-python
 openslide-python
+scikit-learn
