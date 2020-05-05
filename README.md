@@ -10,6 +10,24 @@ pip install object-detection-fastai
 
 Test: [Coco Colab](https://colab.research.google.com/drive/1qUEy1w8uYT2PQhan77RIn8NhfE_bMk63)
 
+# Image annotation 
+
+This paper describes the EXACT-Server in-depth, EXACT enables you to annotate your data and train an object detection model with this repository. Please cite if you use this tool in your research:
+
+Marzahl et al. [EXACT: A collaboration toolset for algorithm-aided annotation of almost everything](https://arxiv.org/abs/2004.14595) 
+
+```
+@misc{marzahl2020exact,
+    title={EXACT: A collaboration toolset for algorithm-aided annotation of almost everything},
+    author={Christian Marzahl and Marc Aubreville and Christof A. Bertram and Jennifer Maier and Christian Bergler and Christine Kröger and Jörn Voigt and Robert Klopfleisch and Andreas Maier},
+    year={2020},
+    eprint={2004.14595},
+    archivePrefix={arXiv},
+    primaryClass={cs.HC}
+}
+```
+
+
 # Update old code
 
 ```python
