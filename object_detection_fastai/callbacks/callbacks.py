@@ -177,6 +177,90 @@ class PascalVOCMetric(Callback):
             return {'last_metrics': last_metrics + [0]}
 
 
+class PascalVOCMetricDETR(PascalVOCMetric):
+
+    def __init__(self, size, metric_names: list, detect_thresh: float=0.3, images_per_batch: int=-1):
+        self.ap = 'AP'
+        self.size = size
+        self.detect_thresh = detect_thresh
+
+        self.images_per_batch = images_per_batch
+        self.metric_names_original = metric_names
+        self.metric_names = ["{}-{}".format(self.ap, i) for i in metric_names]
+
+        self.evaluator = Evaluator()
+        self.boundingBoxes = BoundingBoxes()
+
+    # for output bounding box post-processing
+    def box_cxcywh_to_xyxy(self, x):
+        x_c, y_c, w, h = x.unbind(1)
+        b = [(x_c - 0.5 * w), (y_c - 0.5 * h),
+            (x_c + 0.5 * w), (y_c + 0.5 * h)]
+        return torch.stack(b, dim=1)
+
+    def box_cxcywh_to_xywh(self, x):
+        x_c, y_c, w, h = x.unbind(1)
+        b = [(x_c - 0.5 * w), (y_c - 0.5 * h), (w), (h)]
+        return torch.stack(b, dim=1)
+
+    def rescale_bboxes(self, out_bbox, size):
+        img_w, img_h = size
+        b = self.box_cxcywh_to_xywh(out_bbox)
+        b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32)
+        return b
+
+    def on_batch_end(self, last_output, last_target, **kwargs):
+        # not ready implemented 
+        # network output = cxcywh to x,y,w,h 
+        bbox_tgts, clas_tgts = last_target
+        class_pred_batch, bbox_pred_batch = last_output['pred_logits'], last_output['pred_boxes']
+
+        self.images_per_batch = self.images_per_batch if self.images_per_batch > 0 else class_pred_batch.shape[0]
+        for bbox_gt, class_gt, clas_pred, bbox_pred in \
+                list(zip(bbox_tgts, clas_tgts, class_pred_batch, bbox_pred_batch))[: self.images_per_batch]:
+
+            probas = clas_pred.softmax(-1)[:, :-1]
+            keep = probas.max(-1).values > self.detect_thresh
+
+            if (keep == 1).sum() == 0:
+                continue
+
+            bbox_pred = self.rescale_bboxes(bbox_pred[0, keep], (self.size, self.size))
+            probas = probas[keep]
+
+            t_sz = torch.Tensor([(self.size, self.size)])[None].cpu()
+            bbox_gt = bbox_gt[np.nonzero(class_gt)].squeeze(dim=1).cpu()
+            class_gt = class_gt[class_gt > 0]
+            # change gt from x,y,x2,y2 -> x,y,w,h
+            bbox_gt[:, 2:] = bbox_gt[:, 2:] - bbox_gt[:, :2]
+
+            bbox_gt = to_np(rescale_boxes(bbox_gt, t_sz))
+
+            class_gt = to_np(class_gt) - 1
+            preds = to_np(preds)
+            scores = to_np(scores)
+
+            for box, cla in zip(bbox_gt, class_gt):
+                temp = BoundingBox(imageName=str(self.imageCounter), classId=self.metric_names_original[cla], x=box[0], y=box[1],
+                               w=box[2], h=box[3], typeCoordinates=CoordinatesType.Absolute,
+                               bbType=BBType.GroundTruth, format=BBFormat.XYWH, imgSize=(self.size,self.size))
+
+                self.boundingBoxes.addBoundingBox(temp)
+
+            for box, p in list(zip(bbox_pred, probas)):
+
+                cla = p.argmax()
+                scor = p[cla]
+                temp = BoundingBox(imageName=str(self.imageCounter), classId=self.metric_names_original[cla], x=box[0], y=box[1],
+                                   w=box[2], h=box[3], typeCoordinates=CoordinatesType.Absolute, classConfidence=scor,
+                                   bbType=BBType.Detected, format=BBFormat.XYWH, imgSize=(self.size, self.size))
+
+                self.boundingBoxes.addBoundingBox(temp)
+
+            #image = self.boundingBoxes.drawAllBoundingBoxes(image, str(self.imageCounter))
+            self.imageCounter += 1
+
+
 class PascalVOCMetricByDistance(PascalVOCMetric):
 
     def __init__(self, anchors, size, metric_names: list, detect_thresh: float=0.3, nms_thresh: float=0.5

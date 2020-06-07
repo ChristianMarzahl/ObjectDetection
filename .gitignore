@@ -103,6 +103,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-test.py
+test*.py
 .vscode/settings.json
 .vscode/launch.json
