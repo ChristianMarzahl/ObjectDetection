@@ -14,7 +14,6 @@
 import os
 import sys
 from collections import Counter
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -122,7 +121,7 @@ class Evaluator:
                 det[key] = np.zeros(val)
             # print("Evaluating class: %s (%d detections)" % (str(c), len(dects)))
             # Loop through detections
-            for d in tqdm(range(len(dects)),desc='Detections'):
+            for d in range(len(dects)):
                 # print('dect %s => %s' % (dects[d][0], dects[d][3],))
                 # Find ground truth image
                 gt = [gt for gt in gts if gt[0] == dects[d][0]]
@@ -147,7 +146,7 @@ class Evaluator:
                     FP[d] = 1  # count as false positive
                     # print("FP")
             
-            for gt in tqdm(range(len(gts)), desc='GT'):
+            for gt in range(len(gts)):
 
                 d = [d for d in dects if d[0] == gts[gt][0]]
 
