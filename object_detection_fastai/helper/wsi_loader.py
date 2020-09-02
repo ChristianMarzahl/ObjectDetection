@@ -148,7 +148,7 @@ class SlideObjectCategoryList(ObjectCategoryList):
         h, w = self.x.items[i].shape
         bboxes, labels = self.items[i]
 
-        bboxes = np.array(bboxes)
+        bboxes = np.array([box for box in bboxes]) if len(np.array(bboxes).shape) == 1 else  np.array(bboxes)
         labels = np.array(labels)
 
         if len(labels) > 0:
